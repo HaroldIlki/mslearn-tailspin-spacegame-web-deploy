@@ -1,10 +1,10 @@
 ### YamlMime:Yaml
-#ms.openlocfilehash: 90abef509c03823a46ed568f7b60742509edc27d
-#ms.sourcegitcommit: c218e02a339cd1c422322cd89f26683357e502e1
-#ms.translationtype: HT
-#ms.contentlocale: fr-FR
-#ms.lasthandoff: 09/20/2021
-#ms.locfileid: "128016331"
+ms.openlocfilehash: 37310de3a1b091daf9aa852a3fd8153a048a6424
+ms.sourcegitcommit: c218e02a339cd1c422322cd89f26683357e502e1
+ms.translationtype: HT
+ms.contentlocale: fr-FR
+ms.lasthandoff: 09/20/2021
+ms.locfileid: "128016331"
 trigger:
 - '*'
 variables:
@@ -59,3 +59,25 @@ stages:
         zipAfterPublish: true
     - publish: $(Build.ArtifactStagingDirectory)
       artifact: drop
+- stage: Deploy
+  displayName: Deploy the web application
+  dependsOn: Build
+  jobs:
+  - deployment: Deploy
+    pool:
+      vmImage: ubuntu-20.04
+    environment: dev
+    variables:
+    - group: Release
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - download: current
+            artifact: drop
+          - task: AzureWebApp@1
+            displayName: 'Azure App Service Deploy: website'
+            inputs:
+              azureSubscription: Resource Manager - Tailspin - Space Game
+              appName: $(WebAppName)
+              package: $(Pipeline.Workspace)/drop/$(buildConfiguration)/*.zip
